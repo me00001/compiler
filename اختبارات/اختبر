@@ -96,7 +96,10 @@ def print_indented(text, indent="", file=sys.stdout):
     put intial indent to the text and print the indented text
     """
     lines = str(text).split("\n")
-    term_w = os.get_terminal_size().columns
+    try:
+        term_w = os.get_terminal_size().columns
+    except:
+        term_w = 100000000
     max_width = term_w - len(indent)
     for l in lines:
         # if the length of a line is greater than term_w,

@@ -18,7 +18,8 @@ on:
       - "README.md"
 
   release:
-    types: [created]
+    types: 
+      - published
 
   workflow_dispatch:
     inputs:
@@ -83,7 +84,7 @@ jobs:
         env:
           BOOST_ROOT: ${{steps.boost.outputs.root}}
           BOOST_LIBRARYDIR: ${{steps.boost.outputs.librarydir}}
-        if: ${{ github.event_name === 'release' || github.event.inputs.allTests === "نعم" }}
+        if: ${{ github.event_name == 'release' || github.event.inputs.allTests == 'نعم' }}
         run: |
           export LD_LIBRARY_PATH=${{env.BOOST_LIBRARYDIR}}:$LD_LIBRARY_PATH
           make tests
