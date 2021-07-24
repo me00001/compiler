@@ -33,16 +33,20 @@ def print_help():
 
 def print_title(*lines, level=1, indent=None,
                 top_line=True, bottom_line=True,
-                file=sys.stdout, align="center"):
+                file=sys.stdout, align="center",
+                min_width=35, max_width=0):
     """
-    print some thing like this customizations line `indent` and `level`:
+    print something like this, with customizations like `indent` and `level`:
     ---------------------------
                         هذا سطر
     ---------------------------
     """
-    term_w = os.get_terminal_size().columns
+    try:
+        term_w = os.get_terminal_size().columns
+    except:
+        term_w = 100000000
     # min width is 35 and max width is term_w, otherwise the width will be the max length of `lines`
-    width = min(term_w, max(35, *map(lambda l: len(l), lines)))
+    width = min(term_w, max(min_width, *map(lambda l: len(l), lines)))
     # total printed line width has to be less than the terminal width
     if indent:
         width = width if len(indent) + width < term_w else term_w - len(indent)
@@ -52,14 +56,18 @@ def print_title(*lines, level=1, indent=None,
     if type(level) == int:
         level = levels[level-1]
     if indent == None:
-        a = term_w - width
-        # `>> 1` means divide by 2 and truncate, numbers here are experimental, nothing make sense
-        indent = ((a >> 1) - 5) * ' ' if a > 10 else ''
+        if term_w < 200:
+            a = term_w - width
+            # `>> 1` means divide by 2 and truncate, numbers here are experimental, nothing make sense
+            indent = ((a >> 1) - 5) * ' ' if a > 10 else ''
+        else:
+            indent = " " * 15
     if not len(indent) < term_w - 10:
         raise Exception("Indentation must be smaller than term width by more than 10 chars")
 
     def print_these_lines():
-        max_width = term_w - len(indent)
+        nonlocal max_width
+        max_width = max_width or term_w - len(indent)
         for l in lines:
             # if the length of a line is greater than term_w,
             # split it into smaller lines
@@ -226,6 +234,7 @@ def test_unit(tt, full_path, syntax_only=False):
             print_indented("<غير موجود>", indent=indent)
 
     def do_test():
+        nonlocal expect_file
         execs_stds = None
         execs_inputs = None
         compi_inputs = None
@@ -291,8 +300,8 @@ def test_unit(tt, full_path, syntax_only=False):
             print_indented(expected_behaviour_str, indent=indent)
 
         if not expect_file:
-            the_expect_file = path.join(full_path, f"{name}_توقع.json")
-            with open(the_expect_file, "w") as f:
+            expect_file = path.join(full_path, f"{name}_توقع.json")
+            with open(expect_file, "w") as f:
                 f.write(json.dumps(real_behaviour, indent=2, ensure_ascii=False))
             print("    📝: ", code_file_rel_path)
         elif not syntax_only and expected_behaviour.get("تنفيذ") == SYNTAX_ONLY:

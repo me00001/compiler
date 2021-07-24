@@ -2,15 +2,21 @@ name: Build and Tests
 
 on:
   push:
+    branches:    # all branches
+      - '**'
+    tags-ignore: # ignore pushing tags
+      - '**'
     paths-ignore:
       - 'README.md'
   pull_request:
     branches:
       - main
+    tags-ignore:  # ignore pushing tags
+      - '**'
     paths-ignore:
       - 'README.md'
   release:
-    types: [released]
+    types: [created]
 
 env:
   BUILD_TYPE: Release
