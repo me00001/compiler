@@ -60,7 +60,6 @@ jobs:
         env:
           BOOST_ROOT: ${{steps.boost.outputs.root}}
           BOOST_LIBRARYDIR: ${{steps.boost.outputs.librarydir}}
-        if: ${{ github.event_name != 'release' }}
         run: |
           export LD_LIBRARY_PATH=${{env.BOOST_LIBRARYDIR}}:$LD_LIBRARY_PATH
           make tests-syntax
