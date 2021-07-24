@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import re
-import json
+import json  # TODO: use yaml instead
 import subprocess
 from os import sys, path, walk
 
@@ -10,20 +10,18 @@ __dirname__ = path.abspath(path.dirname(__file__))
 
 
 def is_equal(obj1, obj2):
-    e = True
     if type(obj1) == list and type(obj2) == list:
         for i in range(len(obj1)):
             if not is_equal(obj1[i], obj2[i]):
-                e = False
-                break
+                return False
+        return True
     elif type(obj1) == dict and type(obj2) == dict:
         for p in obj1:
             if not is_equal(obj1.get(p), obj2.get(p)):
-                e = False
-                break
-    else:
-        e = obj1 == obj2
-    return e
+                return False
+        return True
+
+    return obj1 == obj2
 
 
 def run(cmd, return_prcss=False, inputs=None):
@@ -47,6 +45,7 @@ def get_tests(directory='أكواد', clean=False, fill=False):
     tests = []
     tree = walk(directory)  # top-down tree
     for (full_path, dirs, files) in tree:
+        full_path = path.abspath(full_path)
         alif_files = filter(lambda f: re.compile(
             r'.(ألف|alif)$').findall(f), files)
         for f in alif_files:
@@ -80,7 +79,6 @@ def test_unit(tt, full_path, syntax_only=False):
     code_file = tt.get("code_file")
     expect_file = tt.get("expect_file")
     exec_file = path.join(full_path, f"{name}_تنفيذي")
-    exec_file = path.abspath(exec_file)
     log_file = path.join(full_path, f"{name}_سجل")
 
     execs_stds = None
@@ -136,11 +134,13 @@ def test_unit(tt, full_path, syntax_only=False):
     #       change the execution state if only the test pass
     #   - otherwise compare both behaviours' exec and compi behaviours
 
+    code_file_rel_path = path.relpath(code_file, start=__dirname__)
+
     def print_failure_details(indent="        "):
         real_behaviour_lines = json.dumps(real_behaviour,
-                                        indent=2, ensure_ascii=False).split("\n")
+                                          indent=2, ensure_ascii=False).split("\n")
         expected_behaviour_lines = json.dumps(expected_behaviour,
-                                        indent=2, ensure_ascii=False).split("\n")
+                                              indent=2, ensure_ascii=False).split("\n")
         sep = indent * 2 + "-" * 25
         print(f"{indent*2}** ما حدث فعلا **")
         print(sep)
@@ -153,33 +153,33 @@ def test_unit(tt, full_path, syntax_only=False):
         expect_file = path.join(full_path, f"{name}_توقع.json")
         with open(expect_file, "w") as f:
             f.write(json.dumps(real_behaviour, indent=2, ensure_ascii=False))
-        print("    📝: ", expect_file)
+        print("    📝: ", code_file_rel_path)
     elif not syntax_only and expected_behaviour.get("تنفيذ") == SYNTAX_ONLY:
         equal = is_equal(real_behaviour.get("ترجمة"),
                          expected_behaviour.get("ترجمة"))
         if equal:
             with open(expect_file, "w") as f:
                 f.write(json.dumps(real_behaviour, indent=2, ensure_ascii=False))
-            print("    ✅️📝: " + code_file)
+            print("    ✅️📝: " + code_file_rel_path)
             return True
         else:
-            print("    ❌️: " + code_file)
+            print("    ❌️: " + code_file_rel_path)
             print_failure_details()
             return False
     else:
         equal = is_equal(real_behaviour, expected_behaviour)
         if equal:
-            print("    ✅️: " + code_file)
+            print("    ✅️: " + code_file_rel_path)
             return True
         else:
             real_behaviour_str = json.dumps(real_behaviour, )
-            print("    ❌️: " + code_file)
+            print("    ❌️: " + code_file_rel_path)
             print_failure_details()
             return False
 
 
 def test_all(tests, syntax_only=False):
-    if run("alif")[1]:
+    if run("alif")[2]:
         print("مترجم ألف غير مثبت لديك، قم بالبناء أولا أو نزله مبنيا جاهزا\n", file=sys.stderr)
         exit(1)
 
