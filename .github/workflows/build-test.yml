@@ -43,7 +43,7 @@ jobs:
         run: cmake -E make_directory ${{github.workspace}}/build
 
       - name: Configure CMake
-        env: &env
+        env:
           BOOST_ROOT: ${{steps.boost.outputs.root}}
           BOOST_LIBRARYDIR: ${{steps.boost.outputs.librarydir}}
         working-directory: ${{github.workspace}}/build
@@ -57,14 +57,18 @@ jobs:
           sudo make install
       
       - name: Tests Syntax
-        env: *env
+        env:
+          BOOST_ROOT: ${{steps.boost.outputs.root}}
+          BOOST_LIBRARYDIR: ${{steps.boost.outputs.librarydir}}
         if: ${{ github.event_name != 'release' }}
         run: |
           export LD_LIBRARY_PATH=${{env.BOOST_LIBRARYDIR}}:$LD_LIBRARY_PATH
           make tests-syntax
 
       - name: Tests
-        env: *env
+        env:
+          BOOST_ROOT: ${{steps.boost.outputs.root}}
+          BOOST_LIBRARYDIR: ${{steps.boost.outputs.librarydir}}
         if: ${{ github.event_name == 'release' }}
         run: |
           export LD_LIBRARY_PATH=${{env.BOOST_LIBRARYDIR}}:$LD_LIBRARY_PATH
@@ -72,10 +76,10 @@ jobs:
 
   MinGW-Windows:
     runs-on: windows-latest
-
+    
     steps:
       - uses: actions/checkout@v2
-
+      
       - name: Cache Boost
         uses: actions/cache@v2
         with:
@@ -99,7 +103,9 @@ jobs:
         run: cmake -E make_directory ${{github.workspace}}/build
 
       - name: Configure CMake
-        env: *env
+        env:
+          BOOST_ROOT: ${{steps.boost.outputs.root}}
+          BOOST_LIBRARYDIR: ${{steps.boost.outputs.librarydir}}
         working-directory: ${{github.workspace}}/build
         shell: cmd
         run: |
